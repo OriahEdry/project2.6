@@ -5,18 +5,26 @@ Description:
 Date: 01/11/2025
 """
 import socket
+import logging
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[
+        logging.FileHandler('log.txt', mode='a', encoding='utf-8')  # רק לקובץ
+    ]
+)
 
-# ----------------------------- CLIENT SETUP -----------------------------
 def create_client_socket(host='127.0.0.1', port=6741):
     """Create and connect the client socket."""
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, port))
     print(f"[CLIENT] Connected to {host}:{port}")
+    logging.info("[CLIENT] Connected to {host}:{port}")
     return client_socket
 
 
-# ----------------------------- SEND & RECEIVE -----------------------------
 def send_command(client_socket, command):
     """Send a 4-byte command and receive a length-prefixed response."""
     assert isinstance(command, str), "Command must be a string"
@@ -31,6 +39,7 @@ def send_command(client_socket, command):
     length_data = client_socket.recv(4)
     if not length_data:
         print("[CLIENT] Server closed the connection.")
+        logging.info("[CLIENT] Server closed the connection.")
         return None
 
     response_length = int(length_data.decode('utf-8'))
@@ -48,7 +57,6 @@ def send_command(client_socket, command):
     return response_data.decode('utf-8')
 
 
-# ----------------------------- MAIN CLIENT LOOP -----------------------------
 def start_client(host='127.0.0.1', port=6741):
     """Main loop to send commands to the server."""
     client_socket = create_client_socket(host, port)
@@ -65,13 +73,14 @@ def start_client(host='127.0.0.1', port=6741):
             break
         print(f"[SERVER RESPONSE] {response}")
 
+
         if command.upper() == "EXIT":
             break
 
     client_socket.close()
     print("[CLIENT] Disconnected from server.")
+    logging.info("[CLIENT] Disconnected from server.")
 
 
-# ----------------------------- ENTRY POINT -----------------------------
 if __name__ == "__main__":
     start_client()
